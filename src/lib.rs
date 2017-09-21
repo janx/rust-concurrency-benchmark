@@ -1,5 +1,6 @@
 #![feature(test)]
 extern crate test;
+extern crate mioco;
 
 #[cfg(test)]
 mod tests {
@@ -36,18 +37,56 @@ mod tests {
         }
     }
 
+    fn create_mioco_thread(num: usize) {
+        mioco::start(move || {
+            for i in 0..num {
+                mioco::spawn(move || {});
+            }
+        }).unwrap();
+    }
+
+    fn mioco_channel_comm(num: usize) {
+        let (tx, rx) = std::sync::mpsc::channel::<usize>();
+
+        mioco::start(move || {
+            for i in 0..num {
+                let tx = tx.clone();
+                mioco::spawn(move || {
+                    tx.send(i).unwrap();
+                });
+            }
+
+            mioco::spawn(move || {
+                for _ in 0..num {
+                    let _ = rx.recv().unwrap();
+                }
+            });
+        }).unwrap();
+    }
+
+
     #[bench]
-    fn bench_thread_creation_10000(b: &mut Bencher) {
-        b.iter(|| create_thread(10000));
+    fn bench_thread_creation_1000(b: &mut Bencher) {
+        b.iter(|| create_thread(1000));
     }
 
     #[bench]
-    fn bench_channel_clone_10000(b: &mut Bencher) {
-        b.iter(|| clone_channel(10000));
+    fn bench_channel_clone_1000(b: &mut Bencher) {
+        b.iter(|| clone_channel(1000));
     }
 
     #[bench]
-    fn bench_thread_channel_comm_10000(b: &mut Bencher) {
-        b.iter(|| thread_channel_comm(10000));
+    fn bench_thread_channel_comm_1000(b: &mut Bencher) {
+        b.iter(|| thread_channel_comm(1000));
+    }
+
+    #[bench]
+    fn bench_mioco_creation_1000(b: &mut Bencher) {
+        b.iter(|| create_mioco_thread(1000));
+    }
+
+    #[bench]
+    fn bench_mioco_channel_comm_1000(b: &mut Bencher) {
+        b.iter(|| mioco_channel_comm(1000));
     }
 }
