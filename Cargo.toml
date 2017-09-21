@@ -1,0 +1,6 @@
+[package]
+name = "concurrency-benchmark"
+version = "0.1.0"
+authors = ["Jan Xie <jan.h.xie@gmail.com>"]
+
+[dependencies]
